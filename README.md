@@ -20,7 +20,7 @@ MISSING it: any key starting with "settings.wf."  (template-keyed t(`...`) has n
 ## Install
 
 ```bash
-curl -O https://raw.githubusercontent.com/AhmedHassan21/i18n-keycheck/main/check-i18n.mjs
+curl -O https://raw.githubusercontent.com/ahmedmetered/i18n-keycheck/main/check-i18n.mjs
 node check-i18n.mjs                       # defaults: src, src/messages, en,it
 node check-i18n-keycheck.mjs app src/locales en,de    # custom src dir, messages dir, locales
 ```
