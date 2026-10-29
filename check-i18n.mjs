@@ -49,6 +49,12 @@ function walk(dir, out = []) {
 // Gather every t("...") literal and t(`prefix.${...}`) template in the source,
 // excluding the dictionary files themselves.
 const files = walk(join(root, srcDirArg)).filter((f) => !f.startsWith(join(root, messagesArg)));
+// KC-1: a wrong/renamed src dir scans zero files and would false-pass on
+// "all keys present" without checking anything. Fail loud instead.
+if (files.length === 0) {
+  console.error(`No source files found in ${join(root, srcDirArg)} — check the src directory argument. Checked 0 files, so no keys could be verified.`);
+  process.exit(2);
+}
 const used = new Map(); // key -> first file using it
 let templatePrefixes = new Set();
 for (const f of files) {
@@ -77,7 +83,12 @@ for (const f of dictFiles) {
   const base = f.replace(/\.ts$/, "");
   const locale = LOCALES.find((l) => base === l || base.endsWith(`.${l}`));
   const src = readFileSync(join(root, messagesArg, f), "utf8");
-  for (const m of src.matchAll(/"((?:[^"\\]|\\.)*)"\s*:/g)) dicts[locale][m[1]] = true;
+  // KC-2/KC-3: match double-quoted AND single-quoted keys, skip commented-out
+  // lines — a commented `"old.key":` must not count as present.
+  for (const line of src.split("\n")) {
+    if (/^\s*\/\//.test(line)) continue;
+    for (const m of line.matchAll(/["']((?:[^"'\\]|\\.)*)["']\s*:/g)) dicts[locale][m[1]] = true;
+  }
 }
 
 let bad = 0;
